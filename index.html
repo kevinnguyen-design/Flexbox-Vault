@@ -257,6 +257,19 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            display: block;
+            padding: 2px 0;
+            outline: none;
+            transition: color 0.2s;
+        }
+
+        .demo-label:hover, .demo-label:focus {
+            color: var(--text-primary);
+            text-decoration: underline;
         }
 
         [data-tooltip] {
@@ -790,6 +803,17 @@
             }
         };
 
+        function copyToClipboard(text, element, feedbackText, originalText) {
+            navigator.clipboard.writeText(text).then(() => {
+                element.textContent = feedbackText;
+                setTimeout(() => {
+                    element.textContent = originalText;
+                }, 1000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
         function initSidebar() {
             const sidebar = document.getElementById('sidebar');
             const fragment = document.createDocumentFragment();
@@ -908,18 +932,14 @@
 
             wrapper.appendChild(container);
             
-            const label = document.createElement('div');
+            const label = document.createElement('button');
             label.className = 'demo-label';
             label.textContent = value;
-            label.style.cursor = 'pointer';
             label.title = "Click to copy";
+            label.setAttribute('aria-label', `Copy CSS: ${property.name}: ${value};`);
             
             label.onclick = () => {
-                const textToCopy = `${property.name}: ${value};`;
-                navigator.clipboard.writeText(textToCopy);
-                const originalText = value;
-                label.textContent = "Copied!";
-                setTimeout(() => label.textContent = originalText, 1000);
+                copyToClipboard(`${property.name}: ${value};`, label, "Copied!", value);
             };
 
             wrapper.appendChild(label);
@@ -947,19 +967,8 @@
                 title.title = "Click to copy property name";
                 title.setAttribute('aria-label', `Copy CSS property name: ${prop.name}`);
                 
-                const copyAction = () => {
-                    navigator.clipboard.writeText(prop.name);
-                    const originalText = prop.name;
-                    title.textContent = "Copied!";
-                    setTimeout(() => title.textContent = originalText, 1000);
-                };
-                
-                title.onclick = copyAction;
-                title.onkeydown = (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        copyAction();
-                    }
+                title.onclick = () => {
+                    copyToClipboard(prop.name, title, "Copied!", prop.name);
                 };
                 
                 card.appendChild(title);
@@ -980,6 +989,11 @@
             const grid = document.querySelector(`.card-grid[data-section="quick-patterns"]`);
             if (!grid) return;
 
+            const styleTag = document.createElement('style');
+            styleTag.id = 'pattern-styles';
+            document.head.appendChild(styleTag);
+            let allPatternStyles = '';
+
             CATALOG.patterns.forEach(pattern => {
                 const card = document.createElement('div');
                 card.className = 'property-card pattern-card';
@@ -992,32 +1006,55 @@
                 card.appendChild(title);
 
                 // Demo Container
+                const demoId = `pattern-demo-${pattern.slug}`;
                 const demoContainer = document.createElement('div');
                 demoContainer.className = 'demo-container';
+                demoContainer.id = demoId;
                 
-                // Extract CSS rules from selector
-                const cssMatch = pattern.css.match(/\{([^}]+)\}/);
-                if (cssMatch && cssMatch[1]) {
-                    const rules = cssMatch[1].trim();
-                    demoContainer.setAttribute('style', rules);
-                    // Override min-height for demo purposes
-                    if (demoContainer.style.minHeight) demoContainer.style.minHeight = '0';
-                    demoContainer.style.height = '140px';
+                // Process CSS: replace root selector class with ID
+                let patternCss = pattern.css;
+                const firstClassMatch = patternCss.match(/\.[a-zA-Z0-9_-]+/);
+                if (firstClassMatch) {
+                    const rootClass = firstClassMatch[0];
+                    const rootClassName = rootClass.substring(1);
+                    const rootClassRegex = new RegExp('\\.' + rootClassName + '(?![a-zA-Z0-9_-])', 'g');
+                    patternCss = patternCss.replace(rootClassRegex, '#' + demoId);
                 }
+                
+                allPatternStyles += `\n/* ${pattern.label} */\n${patternCss}\n`;
 
-                // Add items to demo
-                const itemsCount = pattern.slug.includes('grid') || pattern.slug.includes('cards') ? 4 : 1;
-                for (let i = 0; i < itemsCount; i++) {
-                    const item = document.createElement('div');
-                    item.className = 'demo-item';
-                    if (pattern.slug.includes('holy-grail')) {
-                        const areas = ['header', 'sidebar', 'main', 'footer'];
-                        item.style.gridArea = areas[i];
+                // Add items to demo with appropriate classes
+                if (pattern.slug === 'sidebar-content-flex') {
+                    const sidebar = document.createElement('div');
+                    sidebar.className = 'demo-item sidebar';
+                    demoContainer.appendChild(sidebar);
+                    const content = document.createElement('div');
+                    content.className = 'demo-item content';
+                    demoContainer.appendChild(content);
+                } else if (pattern.slug === 'holy-grail-layout') {
+                    ['header', 'sidebar', 'main', 'footer'].forEach(area => {
+                        const item = document.createElement('div');
+                        item.className = 'demo-item';
+                        item.style.gridArea = area;
                         item.style.width = '100%';
                         item.style.height = '100%';
+                        demoContainer.appendChild(item);
+                    });
+                } else if (pattern.slug === 'equal-height-cards') {
+                    for (let i = 0; i < 3; i++) {
+                        const item = document.createElement('div');
+                        item.className = 'demo-item card';
+                        demoContainer.appendChild(item);
                     }
-                    demoContainer.appendChild(item);
+                } else {
+                    const itemsCount = pattern.slug.includes('grid') || pattern.slug.includes('cards') ? 4 : 1;
+                    for (let i = 0; i < itemsCount; i++) {
+                        const item = document.createElement('div');
+                        item.className = 'demo-item';
+                        demoContainer.appendChild(item);
+                    }
                 }
+
                 card.appendChild(demoContainer);
 
                 // Copy Button
@@ -1027,18 +1064,17 @@
                 copyBtn.style.width = '100%';
                 copyBtn.style.textAlign = 'center';
                 copyBtn.textContent = "Copy CSS Pattern";
+                copyBtn.setAttribute('aria-label', `Copy CSS pattern for ${pattern.label}`);
                 
-                const copyAction = () => {
-                    navigator.clipboard.writeText(pattern.css);
-                    copyBtn.textContent = "Copied!";
-                    setTimeout(() => copyBtn.textContent = "Copy CSS Pattern", 1000);
+                copyBtn.onclick = () => {
+                    copyToClipboard(pattern.css, copyBtn, "Copied!", "Copy CSS Pattern");
                 };
                 
-                copyBtn.onclick = copyAction;
                 card.appendChild(copyBtn);
-
                 grid.appendChild(card);
             });
+            
+            styleTag.textContent = allPatternStyles;
         }
 
         function initCallouts() {
@@ -1049,6 +1085,9 @@
                 const calloutEl = document.createElement('div');
                 calloutEl.className = `callout-box callout-${callout.type}`;
                 calloutEl.textContent = callout.text;
+                
+                if (callout.type === 'tip') calloutEl.setAttribute('role', 'note');
+                if (callout.type === 'gotcha') calloutEl.setAttribute('role', 'alert');
 
                 // Prepend after the h2
                 const h2 = section.querySelector('h2');

@@ -461,6 +461,10 @@
             .sidebar-overlay.visible {
                 display: block;
             }
+
+            body.lock-scroll {
+                overflow: hidden;
+            }
         }
 
         @media (min-width: 1025px) {
@@ -473,7 +477,7 @@
 <body>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <header id="top-bar">
-        <button id="menu-toggle" aria-label="Toggle navigation menu">
+        <button id="menu-toggle" aria-label="Toggle navigation menu" aria-controls="sidebar" aria-expanded="false">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
         <h1>Flexbox Vault</h1>
@@ -1318,8 +1322,10 @@
             const overlay = document.getElementById('sidebar-overlay');
             
             function toggleMenu() {
-                sidebar.classList.toggle('open');
+                const isOpen = sidebar.classList.toggle('open');
                 overlay.classList.toggle('visible');
+                document.body.classList.toggle('lock-scroll');
+                toggle.setAttribute('aria-expanded', isOpen);
             }
 
             toggle.addEventListener('click', toggleMenu);
@@ -1330,6 +1336,8 @@
                 if (e.target.classList.contains('nav-link')) {
                     sidebar.classList.remove('open');
                     overlay.classList.remove('visible');
+                    document.body.classList.remove('lock-scroll');
+                    toggle.setAttribute('aria-expanded', 'false');
                 }
             });
         }

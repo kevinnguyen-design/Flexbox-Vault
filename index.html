@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples</title>
     <meta name="description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
-    <link rel="canonical" href="https://yourdomain.com">
+    <link rel="canonical" href="https://flexvault.app">
     
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Flex & Grid Vault">
-    <meta property="og:url" content="https://yourdomain.com">
+    <meta property="og:url" content="https://flexvault.app">
     <meta property="og:title" content="CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples">
     <meta property="og:description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="og:image" content="https://yourdomain.com/og-image.png">
-    <meta name="twitter:image" content="https://yourdomain.com/og-image.png">
+    <meta property="og:image" content="https://flexvault.app/og-image.png">
+    <meta name="twitter:image" content="https://flexvault.app/og-image.png">
     
     <!-- JSON-LD -->
     <script type="application/ld+json">
@@ -243,6 +243,25 @@
             background-color: rgba(99, 102, 241, 0.2);
             color: #fff;
             box-shadow: 0 0 0 2px var(--accent-color);
+        }
+
+        .property-note {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent-color);
+            line-height: 1.4;
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .property-note svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+            color: var(--accent-color);
         }
 
         .demo-grid {
@@ -1103,11 +1122,11 @@
             meta: {
                 title: "CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples",
                 description: "Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.",
-                canonical: "https://yourdomain.com",
+                canonical: "https://flexvault.app",
                 og: {
                     type: "website",
                     siteName: "Flex & Grid Vault",
-                    url: "https://yourdomain.com"
+                    url: "https://flexvault.app"
                 },
                 twitter: {
                     card: "summary_large_image"
@@ -1144,6 +1163,16 @@
                 setTimeout(() => {
                     element.textContent = originalText;
                 }, 1000);
+
+                // Telemetry Integration
+                try {
+                    fetch('http://localhost:8787/api/v1/telemetry/copy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ source: 'frontend', value: text }),
+                        mode: 'no-cors' // Ensure it doesn't block even if server is down or CORS fails
+                    }).catch(() => {}); // Silent catch for offline/error
+                } catch (e) {}
             }).catch(err => {
                 console.error('Failed to copy text: ', err);
             });
@@ -1307,6 +1336,16 @@
                 };
                 
                 card.appendChild(title);
+
+                if (prop.note) {
+                    const note = document.createElement('div');
+                    note.className = 'property-note';
+                    note.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>${prop.note}</span>
+                    `;
+                    card.appendChild(note);
+                }
 
                 const demoGrid = document.createElement('div');
                 demoGrid.className = 'demo-grid';

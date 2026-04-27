@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples</title>
     <meta name="description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
-    <link rel="canonical" href="https://flexvault.app">
+    <link rel="canonical" href="https://yourdomain.com">
     
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Flex & Grid Vault">
-    <meta property="og:url" content="https://flexvault.app">
+    <meta property="og:url" content="https://yourdomain.com">
     <meta property="og:title" content="CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples">
     <meta property="og:description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="og:image" content="https://flexvault.app/og-image.png">
-    <meta name="twitter:image" content="https://flexvault.app/og-image.png">
+    <meta property="og:image" content="https://yourdomain.com/og-image.png">
+    <meta name="twitter:image" content="https://yourdomain.com/og-image.png">
     
     <!-- JSON-LD -->
     <script type="application/ld+json">
@@ -606,6 +606,13 @@
             color: var(--accent-color);
         }
 
+        mark {
+            background: rgba(99, 102, 241, 0.35);
+            color: var(--text-primary);
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
         .github-link {
             display: flex;
             align-items: center;
@@ -630,7 +637,7 @@
                 height: auto !important;
                 overflow: visible !important;
             }
-            #sidebar, #top-bar, #app-footer, #menu-toggle, .ad-slot, .sidebar-overlay, #ad-mobile-bottom, .demo-label, [data-tooltip]::after {
+            #sidebar, #top-bar, #app-footer, #menu-toggle, .ad-slot, .sidebar-overlay, #ad-mobile-bottom, [data-tooltip]::after {
                 display: none !important;
             }
             #main {
@@ -689,7 +696,7 @@
         <button id="menu-toggle" aria-label="Toggle navigation menu" aria-controls="sidebar" aria-expanded="false">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h1>Flexbox Vault</h1>
+        <h1 id="site-title">Flex & Grid Vault</h1>
         <div class="search-container">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input type="text" id="search-input" placeholder="Search properties (e.g. justify, gap)..." spellcheck="false" aria-label="Search CSS properties and patterns">
@@ -725,7 +732,7 @@
         </div>
     </footer>
     <script>
-        const CATALOG = {
+        const FALLBACK_CATALOG = {
             product: {
                 name: "Flex & Grid Vault",
                 tagline: "The visual CSS reference you actually keep open."
@@ -1122,11 +1129,11 @@
             meta: {
                 title: "CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples",
                 description: "Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.",
-                canonical: "https://flexvault.app",
+                canonical: "https://yourdomain.com",
                 og: {
                     type: "website",
                     siteName: "Flex & Grid Vault",
-                    url: "https://flexvault.app"
+                    url: "https://yourdomain.com"
                 },
                 twitter: {
                     card: "summary_large_image"
@@ -1157,24 +1164,160 @@
             }
         };
 
-        function copyToClipboard(text, element, feedbackText, originalText) {
-            navigator.clipboard.writeText(text).then(() => {
-                element.textContent = feedbackText;
-                setTimeout(() => {
-                    element.textContent = originalText;
-                }, 1000);
+        let CATALOG = FALLBACK_CATALOG;
+        let searchCache = null;
 
-                // Telemetry Integration
-                try {
-                    fetch('http://localhost:8787/api/v1/telemetry/copy', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ source: 'frontend', value: text }),
-                        mode: 'no-cors' // Ensure it doesn't block even if server is down or CORS fails
-                    }).catch(() => {}); // Silent catch for offline/error
-                } catch (e) {}
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
+        function setCopyFeedback(element, feedbackText, originalText) {
+            element.textContent = feedbackText;
+            setTimeout(() => {
+                element.textContent = originalText;
+            }, 1500);
+        }
+
+        function sendCopyTelemetry(text) {
+            if (!window.location.protocol.startsWith('http')) {
+                return;
+            }
+
+            fetch('/api/v1/telemetry/copy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source: 'frontend', value: text }),
+                keepalive: true
+            }).catch(() => {});
+        }
+
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.top = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            let success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (_) {}
+            document.body.removeChild(textarea);
+            return success;
+        }
+
+        function copyToClipboard(text, element, feedbackText, originalText) {
+            const onSuccess = () => {
+                setCopyFeedback(element, feedbackText, originalText);
+                sendCopyTelemetry(text);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    onSuccess();
+                }).catch(() => {
+                    if (fallbackCopyText(text)) {
+                        onSuccess();
+                    } else {
+                        setCopyFeedback(element, "Copy failed", originalText);
+                    }
+                });
+                return;
+            }
+
+            if (fallbackCopyText(text)) {
+                onSuccess();
+            } else {
+                setCopyFeedback(element, "Copy failed", originalText);
+            }
+        }
+
+        function applyMetaFromCatalog() {
+            if (!CATALOG.meta) {
+                return;
+            }
+
+            document.title = CATALOG.meta.title;
+            const setAttr = (selector, attr, value) => {
+                const node = document.querySelector(selector);
+                if (node && value) {
+                    node.setAttribute(attr, value);
+                }
+            };
+            setAttr('link[rel="canonical"]', 'href', CATALOG.meta.canonical);
+            setAttr('meta[property="og:url"]', 'content', CATALOG.meta.og && CATALOG.meta.og.url);
+            setAttr('meta[property="og:title"]', 'content', CATALOG.meta.title);
+            setAttr('meta[property="og:description"]', 'content', CATALOG.meta.description);
+            setAttr('meta[name="description"]', 'content', CATALOG.meta.description);
+            const siteTitle = document.getElementById('site-title');
+            if (siteTitle && CATALOG.product && CATALOG.product.name) {
+                siteTitle.textContent = CATALOG.product.name;
+            }
+        }
+
+        async function loadCatalog() {
+            if (!window.location.protocol.startsWith('http')) {
+                return;
+            }
+
+            try {
+                const endpoints = [
+                    '/api/v1/catalog',
+                    '/api/v1/properties',
+                    '/api/v1/patterns',
+                    '/api/v1/callouts',
+                    '/api/v1/ad-slots',
+                    '/api/v1/meta',
+                    '/api/v1/shortcuts?os=mac',
+                    '/api/v1/shortcuts?os=windows'
+                ];
+                const responses = await Promise.all(endpoints.map((url) => fetch(url)));
+
+                if (responses.some((response) => !response.ok)) {
+                    return;
+                }
+
+                const [catalogRes, propertiesRes, patternsRes, calloutsRes, adSlotsRes, metaRes, macShortcutsRes, windowsShortcutsRes] =
+                    await Promise.all(responses.map((response) => response.json()));
+
+                CATALOG = {
+                    product: catalogRes.product ?? FALLBACK_CATALOG.product,
+                    sections: catalogRes.sections ?? FALLBACK_CATALOG.sections,
+                    properties: propertiesRes.items ?? FALLBACK_CATALOG.properties,
+                    patterns: patternsRes.items ?? FALLBACK_CATALOG.patterns,
+                    callouts: calloutsRes.items ?? FALLBACK_CATALOG.callouts,
+                    adSlots: adSlotsRes.items ?? FALLBACK_CATALOG.adSlots,
+                    meta: metaRes ?? FALLBACK_CATALOG.meta,
+                    shortcuts: {
+                        mac: macShortcutsRes ?? FALLBACK_CATALOG.shortcuts.mac,
+                        windows: windowsShortcutsRes ?? FALLBACK_CATALOG.shortcuts.windows
+                    }
+                };
+            } catch (_) {}
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function setHighlightBase(el, text) {
+            el.setAttribute('data-highlight-base', text);
+            el.textContent = text;
+        }
+
+        function updateSearchHighlights(query) {
+            document.querySelectorAll('[data-highlight-base]').forEach((el) => {
+                const base = el.getAttribute('data-highlight-base') || '';
+                if (!query) {
+                    el.innerHTML = escapeHtml(base);
+                    return;
+                }
+
+                const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${safeQuery})`, 'ig');
+                el.innerHTML = escapeHtml(base).replace(regex, '<mark>$1</mark>');
             });
         }
 
@@ -1186,7 +1329,7 @@
                 const link = document.createElement('a');
                 link.href = `#${section.id}`;
                 link.className = 'nav-link';
-                link.textContent = section.title;
+                setHighlightBase(link, section.title);
                 fragment.appendChild(link);
             });
 
@@ -1202,7 +1345,7 @@
                 sectionEl.id = section.id;
                 
                 const h2 = document.createElement('h2');
-                h2.textContent = section.title;
+                setHighlightBase(h2, section.title);
                 sectionEl.appendChild(h2);
 
                 const cardGrid = document.createElement('div');
@@ -1298,7 +1441,7 @@
             
             const label = document.createElement('button');
             label.className = 'demo-label';
-            label.textContent = value;
+            setHighlightBase(label, value);
             label.title = "Click to copy";
             label.setAttribute('aria-label', `Copy CSS: ${property.name}: ${value};`);
             
@@ -1327,12 +1470,12 @@
 
                 const title = document.createElement('button');
                 title.className = 'property-title';
-                title.textContent = prop.name;
-                title.title = "Click to copy property name";
-                title.setAttribute('aria-label', `Copy CSS property name: ${prop.name}`);
+                setHighlightBase(title, prop.name);
+                title.title = "Click to copy declaration";
+                title.setAttribute('aria-label', `Copy CSS declaration: ${prop.name}: ;`);
                 
                 title.onclick = () => {
-                    copyToClipboard(prop.name, title, "Copied!", prop.name);
+                    copyToClipboard(`${prop.name}: ;`, title, "Copied!", prop.name);
                 };
                 
                 card.appendChild(title);
@@ -1340,10 +1483,42 @@
                 if (prop.note) {
                     const note = document.createElement('div');
                     note.className = 'property-note';
-                    note.innerHTML = `
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>${prop.note}</span>
-                    `;
+                    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    icon.setAttribute('width', '14');
+                    icon.setAttribute('height', '14');
+                    icon.setAttribute('viewBox', '0 0 24 24');
+                    icon.setAttribute('fill', 'none');
+                    icon.setAttribute('stroke', 'currentColor');
+                    icon.setAttribute('stroke-width', '2');
+                    icon.setAttribute('stroke-linecap', 'round');
+                    icon.setAttribute('stroke-linejoin', 'round');
+
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', '12');
+                    circle.setAttribute('cy', '12');
+                    circle.setAttribute('r', '10');
+
+                    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line1.setAttribute('x1', '12');
+                    line1.setAttribute('y1', '16');
+                    line1.setAttribute('x2', '12');
+                    line1.setAttribute('y2', '12');
+
+                    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line2.setAttribute('x1', '12');
+                    line2.setAttribute('y1', '8');
+                    line2.setAttribute('x2', '12.01');
+                    line2.setAttribute('y2', '8');
+
+                    icon.appendChild(circle);
+                    icon.appendChild(line1);
+                    icon.appendChild(line2);
+
+                    const noteText = document.createElement('span');
+                    setHighlightBase(noteText, prop.note);
+
+                    note.appendChild(icon);
+                    note.appendChild(noteText);
                     card.appendChild(note);
                 }
 
@@ -1375,7 +1550,7 @@
 
                 const title = document.createElement('div');
                 title.className = 'property-title';
-                title.textContent = pattern.label;
+                setHighlightBase(title, pattern.label);
                 title.style.cursor = 'default';
                 card.appendChild(title);
 
@@ -1458,7 +1633,7 @@
 
                 const calloutEl = document.createElement('div');
                 calloutEl.className = `callout-box callout-${callout.type}`;
-                calloutEl.textContent = callout.text;
+                setHighlightBase(calloutEl, callout.text);
                 
                 if (callout.type === 'tip') calloutEl.setAttribute('role', 'note');
                 if (callout.type === 'gotcha') calloutEl.setAttribute('role', 'alert');
@@ -1508,19 +1683,27 @@
                 searchQuery = e.target.value.toLowerCase();
                 debouncedApply();
             });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    searchQuery = '';
+                    applyFilters();
+                    searchInput.blur();
+                }
+            });
         }
 
         function applyFilters() {
             const sections = document.querySelectorAll('section');
             
-            // Create searchable cache if it doesn't exist
-            if (!window._searchCache) {
-                window._searchCache = new Map();
+            if (!searchCache) {
+                searchCache = new Map();
                 CATALOG.properties.forEach(p => {
-                    window._searchCache.set(p.id, (p.name + ' ' + p.values.join(' ')).toLowerCase());
+                    searchCache.set(p.id, (p.name + ' ' + p.values.join(' ') + ' ' + (p.note || '')).toLowerCase());
                 });
                 CATALOG.patterns.forEach(p => {
-                    window._searchCache.set(p.slug, (p.label + ' ' + p.css).toLowerCase());
+                    searchCache.set(p.slug, (p.label + ' ' + p.css).toLowerCase());
                 });
             }
 
@@ -1537,7 +1720,7 @@
                 
                 cards.forEach(card => {
                     const id = card.dataset.id;
-                    const searchableText = window._searchCache.get(id) || '';
+                    const searchableText = searchCache.get(id) || '';
                     const matchesSearch = searchableText.includes(searchQuery);
                     
                     if (matchesSearch) {
@@ -1560,6 +1743,8 @@
                     if (navLink) navLink.style.display = 'none';
                 }
             });
+
+            updateSearchHighlights(searchQuery);
         }
 
         function initDrawer() {
@@ -1658,6 +1843,7 @@
             const searchInput = document.getElementById('search-input');
             if (searchInput) {
                 searchInput.placeholder = `Search properties (${shortcuts.searchShortcut})...`;
+                searchInput.title = `Search shortcut: ${shortcuts.searchShortcut}. Copy shortcut: ${shortcuts.copyShortcut}.`;
             }
         }
 
@@ -1670,7 +1856,10 @@
             }
         }
 
-        function renderApp() {
+        async function renderApp() {
+            await loadCatalog();
+            applyMetaFromCatalog();
+            searchCache = null;
             initSidebar();
             initSections();
             initPropertyCards();
@@ -1687,7 +1876,9 @@
         }
 
         // Initialize rendering
-        document.addEventListener('DOMContentLoaded', renderApp);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+        });
     </script>
 </body>
 </html>

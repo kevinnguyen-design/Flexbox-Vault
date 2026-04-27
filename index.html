@@ -348,10 +348,134 @@
             background-color: #000;
             border-color: rgba(255, 255, 255, 0.1);
         }
+
+        /* Mobile Hamburger */
+        #menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-left: -0.5rem;
+            z-index: 110;
+        }
+
+        /* Ad Slots */
+        .ad-slot {
+            border: 1px dashed var(--border-color);
+            background-color: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 12px;
+            margin: 1.5rem auto;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        #ad-top-bar { margin: 0 1rem; }
+        #ad-mobile-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background-color: var(--bg-color);
+            margin: 0;
+            border-bottom: none;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 1024px) {
+            body {
+                grid-template-areas: 
+                    "top-bar"
+                    "main";
+                grid-template-columns: 1fr;
+            }
+
+            #menu-toggle {
+                display: block;
+            }
+
+            #top-bar {
+                padding: 0 1rem;
+                gap: 1rem;
+            }
+
+            #top-bar h1 {
+                font-size: 1rem;
+            }
+
+            .search-container {
+                max-width: none;
+            }
+
+            .tabs-container {
+                display: none; /* Hide tabs on very small screens or move to drawer? Let's hide for now as per simple mobile nav */
+            }
+
+            #sidebar {
+                position: fixed;
+                top: 60px;
+                left: -280px;
+                width: 280px;
+                height: calc(100vh - 60px);
+                z-index: 100;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 20px 0 25px -5px rgba(0, 0, 0, 0.5);
+            }
+
+            #sidebar.open {
+                left: 0;
+            }
+
+            #main {
+                padding: 0 1rem 1rem 1rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ad-slot[data-desktop-only="true"] {
+                display: none !important;
+            }
+
+            /* Overlay when sidebar open */
+            .sidebar-overlay {
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(2px);
+                z-index: 90;
+                display: none;
+            }
+            .sidebar-overlay.visible {
+                display: block;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .ad-slot[data-mobile-only="true"] {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <header id="top-bar">
+        <button id="menu-toggle" aria-label="Toggle navigation menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
         <h1>Flexbox Vault</h1>
         <div class="search-container">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -1188,6 +1312,58 @@
             });
         }
 
+        function initDrawer() {
+            const toggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            function toggleMenu() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('visible');
+            }
+
+            toggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            // Close when clicking nav links
+            sidebar.addEventListener('click', (e) => {
+                if (e.target.classList.contains('nav-link')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('visible');
+                }
+            });
+        }
+
+        function initAdSlots() {
+            CATALOG.adSlots.forEach(slot => {
+                const el = document.createElement('div');
+                el.id = slot.id;
+                el.className = 'ad-slot';
+                el.textContent = `AD SLOT ${slot.size}`;
+                
+                const [width, height] = slot.size.split('x');
+                el.style.minWidth = `${width}px`;
+                el.style.minHeight = `${height}px`;
+
+                if (slot.desktopOnly) el.dataset.desktopOnly = "true";
+                if (slot.mobileOnly) el.dataset.mobileOnly = "true";
+
+                // Placement logic
+                if (slot.placement === 'header-between-search-and-tabs') {
+                    const tabs = document.querySelector('.tabs-container');
+                    if (tabs) tabs.parentNode.insertBefore(el, tabs);
+                } else if (slot.placement === 'between-section-2-and-3') {
+                    const section3 = document.getElementById(CATALOG.sections[2].id);
+                    if (section3) section3.parentNode.insertBefore(el, section3);
+                } else if (slot.placement === 'between-section-4-and-5') {
+                    const section5 = document.getElementById(CATALOG.sections[4].id);
+                    if (section5) section5.parentNode.insertBefore(el, section5);
+                } else if (slot.placement === 'fixed-bottom-mobile') {
+                    document.body.appendChild(el);
+                }
+            });
+        }
+
         function renderApp() {
             initSidebar();
             initSections();
@@ -1197,6 +1373,8 @@
             initScrollSpy();
             initFilters();
             initSearch();
+            initDrawer();
+            initAdSlots();
             applyFilters();
         }
 

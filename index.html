@@ -310,13 +310,13 @@
         <h1>Flexbox Vault</h1>
         <div class="search-container">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="search-input" placeholder="Search properties (e.g. justify, gap)..." spellcheck="false">
+            <input type="text" id="search-input" placeholder="Search properties (e.g. justify, gap)..." spellcheck="false" aria-label="Search CSS properties and patterns">
         </div>
-        <div class="tabs-container">
-            <button class="tab active" data-filter="all">All</button>
-            <button class="tab" data-filter="flexbox">Flexbox</button>
-            <button class="tab" data-filter="grid">Grid</button>
-            <button class="tab" data-filter="patterns">Patterns</button>
+        <div class="tabs-container" role="tablist">
+            <button class="tab active" data-filter="all" role="tab" aria-selected="true">All</button>
+            <button class="tab" data-filter="flexbox" role="tab" aria-selected="false">Flexbox</button>
+            <button class="tab" data-filter="grid" role="tab" aria-selected="false">Grid</button>
+            <button class="tab" data-filter="patterns" role="tab" aria-selected="false">Patterns</button>
         </div>
     </header>
     <aside id="sidebar">
@@ -907,6 +907,7 @@
 
                 const card = document.createElement('div');
                 card.className = 'property-card';
+                card.dataset.id = prop.id;
 
                 const title = document.createElement('button');
                 title.className = 'property-title';
@@ -950,6 +951,7 @@
             CATALOG.patterns.forEach(pattern => {
                 const card = document.createElement('div');
                 card.className = 'property-card pattern-card';
+                card.dataset.id = pattern.slug;
 
                 const title = document.createElement('div');
                 title.className = 'property-title';
@@ -980,12 +982,24 @@
         let activeFilter = 'all';
         let searchQuery = '';
 
+        function debounce(fn, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
         function initFilters() {
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
+                    tabs.forEach(t => {
+                        t.classList.remove('active');
+                        t.setAttribute('aria-selected', 'false');
+                    });
                     tab.classList.add('active');
+                    tab.setAttribute('aria-selected', 'true');
                     activeFilter = tab.dataset.filter;
                     applyFilters();
                 });
@@ -994,15 +1008,28 @@
 
         function initSearch() {
             const searchInput = document.getElementById('search-input');
+            const debouncedApply = debounce(() => applyFilters(), 150);
+            
             searchInput.addEventListener('input', (e) => {
                 searchQuery = e.target.value.toLowerCase();
-                applyFilters();
+                debouncedApply();
             });
         }
 
         function applyFilters() {
             const sections = document.querySelectorAll('section');
             
+            // Create searchable cache if it doesn't exist
+            if (!window._searchCache) {
+                window._searchCache = new Map();
+                CATALOG.properties.forEach(p => {
+                    window._searchCache.set(p.id, (p.name + ' ' + p.values.join(' ')).toLowerCase());
+                });
+                CATALOG.patterns.forEach(p => {
+                    window._searchCache.set(p.slug, (p.label + ' ' + p.css).toLowerCase());
+                });
+            }
+
             sections.forEach(section => {
                 const sectionData = CATALOG.sections.find(s => s.id === section.id);
                 const sectionFilter = sectionData ? sectionData.filter : '';
@@ -1015,12 +1042,9 @@
                 let visibleCardsInSection = 0;
                 
                 cards.forEach(card => {
-                    // Property name or Pattern label
-                    const propertyName = card.querySelector('.property-title').textContent.toLowerCase();
-                    const values = Array.from(card.querySelectorAll('.demo-label')).map(l => l.textContent.toLowerCase());
-                    
-                    const matchesSearch = propertyName.includes(searchQuery) || 
-                                          values.some(v => v.includes(searchQuery));
+                    const id = card.dataset.id;
+                    const searchableText = window._searchCache.get(id) || '';
+                    const matchesSearch = searchableText.includes(searchQuery);
                     
                     if (matchesSearch) {
                         card.style.display = 'flex';

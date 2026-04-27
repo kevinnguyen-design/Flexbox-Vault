@@ -102,6 +102,7 @@
         section h2 {
             position: sticky;
             top: 0;
+            background-color: #0d0d0d; /* Fallback for older browsers */
             background-color: rgba(13, 13, 13, 0.8);
             backdrop-filter: blur(10px);
             padding: 1.5rem 0 1rem 0;
@@ -576,19 +577,26 @@
             }
         };
 
-        function renderApp() {
+        function initSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const main = document.getElementById('main');
+            const fragment = document.createDocumentFragment();
 
             CATALOG.sections.forEach(section => {
-                // Sidebar link
                 const link = document.createElement('a');
                 link.href = `#${section.id}`;
                 link.className = 'nav-link';
                 link.textContent = section.title;
-                sidebar.appendChild(link);
+                fragment.appendChild(link);
+            });
 
-                // Main section
+            sidebar.appendChild(fragment);
+        }
+
+        function initSections() {
+            const main = document.getElementById('main');
+            const fragment = document.createDocumentFragment();
+
+            CATALOG.sections.forEach(section => {
                 const sectionEl = document.createElement('section');
                 sectionEl.id = section.id;
                 
@@ -598,31 +606,42 @@
 
                 const cardGrid = document.createElement('div');
                 cardGrid.className = 'card-grid';
-                // Add a data attribute for easier card injection in next tasks
                 cardGrid.dataset.section = section.id;
                 sectionEl.appendChild(cardGrid);
 
-                main.appendChild(sectionEl);
+                fragment.appendChild(sectionEl);
             });
 
-            // Basic scroll spy for active link (optional but nice)
-            main.addEventListener('scroll', () => {
-                let current = '';
-                const sections = document.querySelectorAll('section');
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    if (main.scrollTop >= sectionTop - 100) {
-                        current = section.getAttribute('id');
-                    }
-                });
+            main.appendChild(fragment);
+        }
 
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href').substring(1) === current) {
-                        link.classList.add('active');
+        function initScrollSpy() {
+            const options = {
+                root: document.getElementById('main'),
+                rootMargin: '-10% 0px -80% 0px',
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
                     }
                 });
+            }, options);
+
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
             });
+        }
+
+        function renderApp() {
+            initSidebar();
+            initSections();
+            initScrollSpy();
         }
 
         // Initialize rendering

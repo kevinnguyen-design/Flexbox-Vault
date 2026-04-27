@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSS Flexbox Vault</title>
+    <title>CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples</title>
+    <meta name="description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -97,5 +98,426 @@
     <main id="main">
         <!-- Main content will go here -->
     </main>
+    <script>
+        const CATALOG = {
+            product: {
+                name: "Flex & Grid Vault",
+                tagline: "The visual CSS reference you actually keep open."
+            },
+            sections: [
+                { id: "flex-container-properties", title: "Flexbox Container Properties", filter: "flexbox" },
+                { id: "flex-item-properties", title: "Flexbox Item Properties", filter: "flexbox" },
+                { id: "grid-container-properties", title: "Grid Container Properties", filter: "grid" },
+                { id: "grid-item-properties", title: "Grid Item Properties", filter: "grid" },
+                { id: "quick-patterns", title: "Quick Patterns", filter: "patterns" }
+            ],
+            properties: [
+                {
+                    id: "display-flex-grid",
+                    name: "display",
+                    layout: "both",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["flex", "inline-flex", "grid", "inline-grid"]
+                },
+                {
+                    id: "flex-direction",
+                    name: "flex-direction",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["row", "row-reverse", "column", "column-reverse"]
+                },
+                {
+                    id: "flex-wrap",
+                    name: "flex-wrap",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["nowrap", "wrap", "wrap-reverse"]
+                },
+                {
+                    id: "justify-content-flex",
+                    name: "justify-content",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["flex-start", "flex-end", "center", "space-between", "space-around", "space-evenly"]
+                },
+                {
+                    id: "align-items-flex",
+                    name: "align-items",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["stretch", "flex-start", "flex-end", "center", "baseline"]
+                },
+                {
+                    id: "align-content-flex",
+                    name: "align-content",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["stretch", "flex-start", "flex-end", "center", "space-between", "space-around"]
+                },
+                {
+                    id: "gap-flex",
+                    name: "gap",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["4px", "8px", "16px", "24px"]
+                },
+                {
+                    id: "row-gap-flex",
+                    name: "row-gap",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["0", "8px", "16px"]
+                },
+                {
+                    id: "column-gap-flex",
+                    name: "column-gap",
+                    layout: "flexbox",
+                    level: "container",
+                    section: "flex-container-properties",
+                    values: ["0", "8px", "16px"]
+                },
+                {
+                    id: "flex-grow",
+                    name: "flex-grow",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["0", "1", "2"]
+                },
+                {
+                    id: "flex-shrink",
+                    name: "flex-shrink",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["0", "1", "2"]
+                },
+                {
+                    id: "flex-basis",
+                    name: "flex-basis",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["auto", "0", "200px", "50%"]
+                },
+                {
+                    id: "flex",
+                    name: "flex",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["0 0 auto", "1 1 0", "1 0 auto"]
+                },
+                {
+                    id: "align-self-flex",
+                    name: "align-self",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["auto", "stretch", "flex-start", "flex-end", "center", "baseline"]
+                },
+                {
+                    id: "order",
+                    name: "order",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["-1", "0", "1", "2"]
+                },
+                {
+                    id: "min-width",
+                    name: "min-width",
+                    layout: "flexbox",
+                    level: "item",
+                    section: "flex-item-properties",
+                    values: ["0"],
+                    note: "min-width: 0 on flex children prevents overflow blowout."
+                },
+                {
+                    id: "grid-template-columns",
+                    name: "grid-template-columns",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: [
+                        "repeat(3, 1fr)",
+                        "1fr 2fr",
+                        "repeat(3, minmax(120px, 1fr))",
+                        "repeat(auto-fill, minmax(160px, 1fr))",
+                        "repeat(auto-fit, minmax(160px, 1fr))"
+                    ]
+                },
+                {
+                    id: "grid-template-rows",
+                    name: "grid-template-rows",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["auto", "120px auto 1fr", "repeat(3, minmax(80px, auto))"]
+                },
+                {
+                    id: "grid-template-areas",
+                    name: "grid-template-areas",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ['"header header" "sidebar main" "footer footer"']
+                },
+                {
+                    id: "gap-grid",
+                    name: "gap",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["8px", "16px", "24px"]
+                },
+                {
+                    id: "row-gap-grid",
+                    name: "row-gap",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["8px", "16px"]
+                },
+                {
+                    id: "column-gap-grid",
+                    name: "column-gap",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["8px", "16px"]
+                },
+                {
+                    id: "justify-items",
+                    name: "justify-items",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["start", "end", "center", "stretch"]
+                },
+                {
+                    id: "align-items-grid",
+                    name: "align-items",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["start", "end", "center", "stretch"]
+                },
+                {
+                    id: "justify-content-grid",
+                    name: "justify-content",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["start", "end", "center", "space-between", "space-around", "space-evenly"]
+                },
+                {
+                    id: "align-content-grid",
+                    name: "align-content",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["start", "end", "center", "space-between", "space-around", "stretch"]
+                },
+                {
+                    id: "grid-auto-flow",
+                    name: "grid-auto-flow",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["row", "column", "dense"]
+                },
+                {
+                    id: "grid-auto-rows",
+                    name: "grid-auto-rows",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["80px", "minmax(80px, auto)", "1fr"]
+                },
+                {
+                    id: "grid-auto-columns",
+                    name: "grid-auto-columns",
+                    layout: "grid",
+                    level: "container",
+                    section: "grid-container-properties",
+                    values: ["120px", "minmax(120px, auto)", "1fr"]
+                },
+                {
+                    id: "grid-column",
+                    name: "grid-column",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["span 2", "1 / 3", "2 / 4"]
+                },
+                {
+                    id: "grid-row",
+                    name: "grid-row",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["span 2", "1 / 3", "2 / 4"]
+                },
+                {
+                    id: "grid-area",
+                    name: "grid-area",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["header", "sidebar", "main", "footer", "1 / 1 / 3 / 3"]
+                },
+                {
+                    id: "justify-self",
+                    name: "justify-self",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["start", "end", "center", "stretch"]
+                },
+                {
+                    id: "align-self-grid",
+                    name: "align-self",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["start", "end", "center", "stretch"]
+                },
+                {
+                    id: "z-index-grid",
+                    name: "z-index",
+                    layout: "grid",
+                    level: "item",
+                    section: "grid-item-properties",
+                    values: ["0", "1", "10"],
+                    note: "z-index works when grid items overlap in the same grid area."
+                }
+            ],
+            patterns: [
+                {
+                    slug: "centered-single-item",
+                    label: "Centered single item (both axes)",
+                    layout: "flexbox",
+                    css: ".centered { display: grid; place-items: center; min-height: 100vh; }"
+                },
+                {
+                    slug: "sticky-footer-layout",
+                    label: "Sticky footer layout",
+                    layout: "grid",
+                    css: ".page { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }"
+                },
+                {
+                    slug: "holy-grail-layout",
+                    label: "Holy grail layout",
+                    layout: "grid",
+                    css: ".holy-grail { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: 'header header' 'sidebar main' 'footer footer'; }"
+                },
+                {
+                    slug: "card-grid-auto-fill-minmax",
+                    label: "Card grid with auto-fill and minmax",
+                    layout: "grid",
+                    css: ".cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }"
+                },
+                {
+                    slug: "sidebar-content-flex",
+                    label: "Sidebar + content (fixed sidebar)",
+                    layout: "flexbox",
+                    css: ".layout { display: flex; } .sidebar { flex: 0 0 280px; } .content { flex: 1; min-width: 0; }"
+                },
+                {
+                    slug: "equal-height-cards",
+                    label: "Equal height cards",
+                    layout: "flexbox",
+                    css: ".card-row { display: flex; gap: 16px; } .card { flex: 1 1 0; display: flex; flex-direction: column; }"
+                },
+                {
+                    slug: "masonry-ish-grid-auto-rows",
+                    label: "Masonry-ish layout via grid-auto-rows",
+                    layout: "grid",
+                    css: ".masonry { display: grid; grid-auto-flow: dense; grid-auto-rows: 8px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }"
+                }
+            ],
+            callouts: [
+                {
+                    type: "tip",
+                    section: "flex-item-properties",
+                    text: "flex: 1 is shorthand for flex: 1 1 0, not flex: 1 1 auto."
+                },
+                {
+                    type: "gotcha",
+                    section: "flex-item-properties",
+                    text: "min-width: 0 on flex children prevents overflow blowout."
+                },
+                {
+                    type: "tip",
+                    section: "grid-container-properties",
+                    text: "auto-fill vs auto-fit: auto-fill keeps empty tracks, auto-fit collapses them."
+                },
+                {
+                    type: "gotcha",
+                    section: "grid-item-properties",
+                    text: "grid-area names cannot start with a number."
+                },
+                {
+                    type: "pattern",
+                    section: "quick-patterns",
+                    text: "Card grid with minmax gives responsive columns without media queries."
+                },
+                {
+                    type: "tip",
+                    section: "grid-container-properties",
+                    text: "Use grid-auto-flow: dense for denser packing when order shifts are acceptable."
+                },
+                {
+                    type: "gotcha",
+                    section: "flex-container-properties",
+                    text: "align-content does nothing on single-line flex containers."
+                },
+                {
+                    type: "tip",
+                    section: "grid-item-properties",
+                    text: "Overlapping grid items respect stacking context and z-index."
+                }
+            ],
+            adSlots: [
+                { id: "ad-top-bar", size: "728x90", placement: "header-between-search-and-tabs", desktopOnly: true },
+                { id: "ad-mid-flex", size: "300x250", placement: "between-section-2-and-3", desktopOnly: false },
+                { id: "ad-mid-grid", size: "300x250", placement: "between-section-4-and-5", desktopOnly: false },
+                { id: "ad-mobile-bottom", size: "320x50", placement: "fixed-bottom-mobile", desktopOnly: false, mobileOnly: true }
+            ],
+            meta: {
+                title: "CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples",
+                description: "Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.",
+                canonical: "https://yourdomain.com",
+                og: {
+                    type: "website",
+                    siteName: "Flex & Grid Vault",
+                    url: "https://yourdomain.com"
+                },
+                twitter: {
+                    card: "summary_large_image"
+                },
+                jsonLd: {
+                    "@context": "https://schema.org",
+                    "@type": "HowTo",
+                    name: "Flex & Grid Vault quick usage",
+                    step: [
+                        { "@type": "HowToStep", name: "Filter to Flexbox, Grid, or Patterns" },
+                        { "@type": "HowToStep", name: "Inspect live property mini-preview" },
+                        { "@type": "HowToStep", name: "Copy property/value or pattern CSS" },
+                        { "@type": "HowToStep", name: "Print to two-column PDF cheatsheet" }
+                    ]
+                }
+            }
+        };
+    </script>
 </body>
 </html>

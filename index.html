@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples</title>
     <meta name="description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
+    <link rel="canonical" href="https://yourdomain.com">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Flex & Grid Vault">
+    <meta property="og:url" content="https://yourdomain.com">
+    <meta property="og:title" content="CSS Flexbox & Grid Cheat Sheet — Visual Reference with Live Examples">
+    <meta property="og:description" content="Interactive CSS Flexbox and Grid cheatsheet with live visual demos, copy-paste patterns, and instant search. Free, no signup, works offline.">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Flex & Grid Vault quick usage",
+      "step": [
+        { "@type": "HowToStep", "name": "Filter to Flexbox, Grid, or Patterns" },
+        { "@type": "HowToStep", "name": "Inspect live property mini-preview" },
+        { "@type": "HowToStep", "name": "Copy property/value or pattern CSS" },
+        { "@type": "HowToStep", "name": "Print to two-column PDF cheatsheet" }
+      ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -472,6 +499,109 @@
                 display: none !important;
             }
         }
+
+        /* OS Toggle & Print Button */
+        .os-toggle {
+            display: flex;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px;
+            margin-left: auto;
+        }
+
+        .os-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .os-btn.active {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .top-bar-btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .top-bar-btn:hover {
+            opacity: 0.9;
+        }
+
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            #sidebar, #top-bar, #menu-toggle, .ad-slot, .sidebar-overlay, #ad-mobile-bottom, .demo-label, [data-tooltip]::after {
+                display: none !important;
+            }
+            #main {
+                grid-area: auto !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            section {
+                padding-top: 1rem !important;
+                margin-bottom: 2rem !important;
+            }
+            section h2 {
+                position: static !important;
+                background-color: white !important;
+                color: black !important;
+                border-bottom: 2px solid black !important;
+                padding: 0.5rem 0 !important;
+            }
+            .card-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .property-card {
+                background-color: white !important;
+                border: 1px solid #eee !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                color: black !important;
+            }
+            .property-title {
+                background-color: #f3f4f6 !important;
+                color: black !important;
+                border: 1px solid #ddd !important;
+            }
+            .demo-container {
+                background-color: white !important;
+                border: 1px solid black !important;
+            }
+            .demo-item {
+                background-color: transparent !important;
+                outline: 1px solid black !important;
+            }
+            .callout-box {
+                background-color: #f9fafb !important;
+                border: 1px solid #eee !important;
+                border-left-width: 4px !important;
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -491,6 +621,11 @@
             <button class="tab" data-filter="grid" role="tab" aria-selected="false">Grid</button>
             <button class="tab" data-filter="patterns" role="tab" aria-selected="false">Patterns</button>
         </div>
+        <div class="os-toggle" id="os-toggle">
+            <button class="os-btn" data-os="mac" aria-label="Use Mac shortcuts">Mac</button>
+            <button class="os-btn" data-os="windows" aria-label="Use Windows shortcuts">Win</button>
+        </div>
+        <button id="print-btn" class="top-bar-btn">Print PDF</button>
     </header>
     <aside id="sidebar">
         <!-- Sidebar content will go here -->
@@ -1372,6 +1507,58 @@
             });
         }
 
+        let currentOS = 'mac';
+
+        function initShortcuts() {
+            // Detect OS
+            if (navigator.platform.toUpperCase().indexOf('WIN') !== -1) {
+                currentOS = 'windows';
+            } else if (navigator.platform.toUpperCase().indexOf('MAC') !== -1) {
+                currentOS = 'mac';
+            }
+
+            const osButtons = document.querySelectorAll('.os-btn');
+            osButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.os === currentOS);
+                btn.addEventListener('click', () => {
+                    currentOS = btn.dataset.os;
+                    osButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateShortcuts();
+                });
+            });
+
+            updateShortcuts();
+
+            // Search shortcut listener
+            window.addEventListener('keydown', (e) => {
+                const isMac = currentOS === 'mac';
+                const modifier = isMac ? e.metaKey : e.ctrlKey;
+                
+                if (modifier && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                }
+            });
+        }
+
+        function updateShortcuts() {
+            const shortcuts = CATALOG.shortcuts[currentOS];
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.placeholder = `Search properties (${shortcuts.searchShortcut})...`;
+            }
+        }
+
+        function initPrint() {
+            const printBtn = document.getElementById('print-btn');
+            if (printBtn) {
+                printBtn.addEventListener('click', () => {
+                    window.print();
+                });
+            }
+        }
+
         function renderApp() {
             initSidebar();
             initSections();
@@ -1383,6 +1570,8 @@
             initSearch();
             initDrawer();
             initAdSlots();
+            initShortcuts();
+            initPrint();
             applyFilters();
         }
 

@@ -24,6 +24,10 @@
             --text-primary: #e5e7eb;
             --text-secondary: #9ca3af;
             
+            --demo-indigo: #6366f1;
+            --demo-amber: #f59e0b;
+            --demo-emerald: #10b981;
+
             --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -102,7 +106,6 @@
         section h2 {
             position: sticky;
             top: 0;
-            background-color: #0d0d0d; /* Fallback for older browsers */
             background-color: rgba(13, 13, 13, 0.8);
             backdrop-filter: blur(10px);
             padding: 1.5rem 0 1rem 0;
@@ -116,6 +119,107 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 1.5rem;
+        }
+
+        .property-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .property-title {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            cursor: pointer;
+            background-color: rgba(99, 102, 241, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            align-self: flex-start;
+            transition: all 0.2s;
+        }
+
+        .property-title:hover {
+            background-color: rgba(99, 102, 241, 0.2);
+            color: #fff;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .demo-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .demo-container {
+            background-color: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            height: 100px;
+            position: relative;
+            overflow: hidden;
+            padding: 8px;
+            cursor: help;
+        }
+
+        .demo-item {
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .demo-item:nth-child(1) { background-color: var(--demo-indigo); }
+        .demo-item:nth-child(2) { background-color: var(--demo-amber); }
+        .demo-item:nth-child(3) { background-color: var(--demo-emerald); }
+
+        .demo-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-align: center;
+            font-family: var(--font-mono);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background-color: #1e1e1e;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            white-space: pre;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 100;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
         }
 
         /* Basic dark theme scrollbar */
@@ -638,9 +742,87 @@
             });
         }
 
+        function createDemoElement(property, value) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'demo-wrapper';
+
+            const container = document.createElement('div');
+            container.className = 'demo-container';
+            
+            // Base layout
+            let displayMode = 'flex';
+            if (property.layout === 'grid') {
+                displayMode = 'grid';
+            } else if (property.layout === 'both') {
+                displayMode = property.section.includes('grid') ? 'grid' : 'flex';
+            }
+            container.style.display = displayMode;
+
+            // Apply property
+            if (property.level === 'container') {
+                container.style[property.name] = value;
+            }
+
+            // Items
+            for (let i = 0; i < 3; i++) {
+                const item = document.createElement('div');
+                item.className = 'demo-item';
+                if (property.level === 'item' && i === 0) {
+                    item.style[property.name] = value;
+                }
+                container.appendChild(item);
+            }
+
+            // Tooltip
+            const fullCss = `display: ${displayMode};\n${property.name}: ${value};`;
+            container.setAttribute('data-tooltip', fullCss);
+
+            wrapper.appendChild(container);
+            
+            const label = document.createElement('div');
+            label.className = 'demo-label';
+            label.textContent = value;
+            wrapper.appendChild(label);
+
+            return wrapper;
+        }
+
+        function initPropertyCards() {
+            CATALOG.properties.forEach(prop => {
+                const grid = document.querySelector(`.card-grid[data-section="${prop.section}"]`);
+                if (!grid) return;
+
+                const card = document.createElement('div');
+                card.className = 'property-card';
+
+                const title = document.createElement('div');
+                title.className = 'property-title';
+                title.textContent = prop.name;
+                title.title = "Click to copy property name";
+                title.onclick = () => {
+                    navigator.clipboard.writeText(prop.name);
+                    const originalText = title.textContent;
+                    title.textContent = "Copied!";
+                    setTimeout(() => title.textContent = originalText, 1000);
+                };
+                card.appendChild(title);
+
+                const demoGrid = document.createElement('div');
+                demoGrid.className = 'demo-grid';
+
+                prop.values.forEach(val => {
+                    demoGrid.appendChild(createDemoElement(prop, val));
+                });
+
+                card.appendChild(demoGrid);
+                grid.appendChild(card);
+            });
+        }
+
         function renderApp() {
             initSidebar();
             initSections();
+            initPropertyCards();
             initScrollSpy();
         }
 

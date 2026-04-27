@@ -141,11 +141,14 @@
             border-radius: 4px;
             align-self: flex-start;
             transition: all 0.2s;
+            border: none;
+            outline: none;
         }
 
-        .property-title:hover {
+        .property-title:hover, .property-title:focus {
             background-color: rgba(99, 102, 241, 0.2);
             color: #fff;
+            box-shadow: 0 0 0 2px var(--accent-color);
         }
 
         .demo-grid {
@@ -750,11 +753,9 @@
             container.className = 'demo-container';
             
             // Base layout
-            let displayMode = 'flex';
-            if (property.layout === 'grid') {
-                displayMode = 'grid';
-            } else if (property.layout === 'both') {
-                displayMode = property.section.includes('grid') ? 'grid' : 'flex';
+            let displayMode = property.layout === 'grid' ? 'grid' : 'flex';
+            if (property.name === 'display') {
+                displayMode = value;
             }
             container.style.display = displayMode;
 
@@ -764,9 +765,31 @@
             }
 
             // Items
-            for (let i = 0; i < 3; i++) {
+            const itemCount = property.id === 'grid-template-areas' ? 4 : 3;
+            for (let i = 0; i < itemCount; i++) {
                 const item = document.createElement('div');
                 item.className = 'demo-item';
+                
+                // Specific logic for grid-template-areas
+                if (property.id === 'grid-template-areas') {
+                    const areas = ['header', 'sidebar', 'main', 'footer'];
+                    item.style.gridArea = areas[i];
+                    item.style.width = '100%';
+                    item.style.height = '100%';
+                }
+
+                // Specific logic for z-index overlap
+                if (property.id === 'z-index-grid') {
+                    item.style.gridColumn = '1';
+                    item.style.gridRow = '1';
+                    if (i > 0) {
+                        item.style.transform = `translate(${i * 12}px, ${i * 12}px)`;
+                        item.style.opacity = '0.8';
+                        // Give other items a middle-ground z-index to test layering
+                        item.style.zIndex = '5';
+                    }
+                }
+
                 if (property.level === 'item' && i === 0) {
                     item.style[property.name] = value;
                 }
@@ -788,23 +811,39 @@
         }
 
         function initPropertyCards() {
+            const containers = {};
+            CATALOG.sections.forEach(s => {
+                containers[s.id] = document.querySelector(`.card-grid[data-section="${s.id}"]`);
+            });
+
             CATALOG.properties.forEach(prop => {
-                const grid = document.querySelector(`.card-grid[data-section="${prop.section}"]`);
+                const grid = containers[prop.section];
                 if (!grid) return;
 
                 const card = document.createElement('div');
                 card.className = 'property-card';
 
-                const title = document.createElement('div');
+                const title = document.createElement('button');
                 title.className = 'property-title';
                 title.textContent = prop.name;
                 title.title = "Click to copy property name";
-                title.onclick = () => {
+                title.setAttribute('aria-label', `Copy CSS property name: ${prop.name}`);
+                
+                const copyAction = () => {
                     navigator.clipboard.writeText(prop.name);
-                    const originalText = title.textContent;
+                    const originalText = prop.name;
                     title.textContent = "Copied!";
                     setTimeout(() => title.textContent = originalText, 1000);
                 };
+                
+                title.onclick = copyAction;
+                title.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        copyAction();
+                    }
+                };
+                
                 card.appendChild(title);
 
                 const demoGrid = document.createElement('div');

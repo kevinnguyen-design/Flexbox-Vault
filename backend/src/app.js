@@ -119,7 +119,7 @@ function parseJsonBody(body) {
   }
 }
 
-function route({ method, url, body }) {
+function route({ method, url, body, headers = {} }) {
   const parsed = parseRequestUrl(url);
   const pathname = parsed.pathname;
 
@@ -165,6 +165,11 @@ function route({ method, url, body }) {
   }
 
   if (method === "POST" && pathname === "/api/v1/telemetry/copy") {
+    const contentType = normalizeText(headers["content-type"] ?? "");
+    if (contentType && !contentType.includes("application/json")) {
+      return json(415, { error: "Content-Type must be application/json." });
+    }
+
     const parsedBody = parseJsonBody(body);
     if (parsedBody === null) {
       return json(400, {
@@ -184,20 +189,28 @@ function route({ method, url, body }) {
 }
 
 export function createApp() {
+  const maxBodyBytes = 16 * 1024;
+
   return {
-    inject({ method = "GET", url = "/", body = "" }) {
-      return route({ method, url, body });
+    inject({ method = "GET", url = "/", body = "", headers = {} }) {
+      return route({ method, url, body, headers });
     },
     async handleNodeRequest(request) {
       const chunks = [];
+      let totalBytes = 0;
       for await (const chunk of request) {
+        totalBytes += chunk.length;
+        if (totalBytes > maxBodyBytes) {
+          return json(413, { error: "Payload too large." });
+        }
         chunks.push(chunk);
       }
 
       return route({
         method: request.method ?? "GET",
         url: request.url ?? "/",
-        body: Buffer.concat(chunks).toString("utf8")
+        body: Buffer.concat(chunks).toString("utf8"),
+        headers: request.headers ?? {}
       });
     }
   };

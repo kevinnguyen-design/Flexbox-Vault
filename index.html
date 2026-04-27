@@ -60,6 +60,70 @@
             align-items: center;
             padding: 0 1.5rem;
             z-index: 10;
+            gap: 2rem;
+        }
+
+        #top-bar h1 {
+            font-size: 1.2rem;
+            white-space: nowrap;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        #search-input {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background: none;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
         }
 
         #sidebar {
@@ -244,6 +308,16 @@
 <body>
     <header id="top-bar">
         <h1>Flexbox Vault</h1>
+        <div class="search-container">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="search-input" placeholder="Search properties (e.g. justify, gap)..." spellcheck="false">
+        </div>
+        <div class="tabs-container">
+            <button class="tab active" data-filter="all">All</button>
+            <button class="tab" data-filter="flexbox">Flexbox</button>
+            <button class="tab" data-filter="grid">Grid</button>
+            <button class="tab" data-filter="patterns">Patterns</button>
+        </div>
     </header>
     <aside id="sidebar">
         <!-- Sidebar content will go here -->
@@ -805,6 +879,17 @@
             const label = document.createElement('div');
             label.className = 'demo-label';
             label.textContent = value;
+            label.style.cursor = 'pointer';
+            label.title = "Click to copy";
+            
+            label.onclick = () => {
+                const textToCopy = `${property.name}: ${value};`;
+                navigator.clipboard.writeText(textToCopy);
+                const originalText = value;
+                label.textContent = "Copied!";
+                setTimeout(() => label.textContent = originalText, 1000);
+            };
+
             wrapper.appendChild(label);
 
             return wrapper;
@@ -858,11 +943,116 @@
             });
         }
 
+        function initPatterns() {
+            const grid = document.querySelector(`.card-grid[data-section="quick-patterns"]`);
+            if (!grid) return;
+
+            CATALOG.patterns.forEach(pattern => {
+                const card = document.createElement('div');
+                card.className = 'property-card pattern-card';
+
+                const title = document.createElement('div');
+                title.className = 'property-title';
+                title.textContent = pattern.label;
+                title.style.cursor = 'default';
+                title.style.pointerEvents = 'none';
+                card.appendChild(title);
+
+                const code = document.createElement('div');
+                code.className = 'demo-label';
+                code.style.textAlign = 'left';
+                code.style.marginTop = '0.5rem';
+                code.style.cursor = 'pointer';
+                code.textContent = pattern.css;
+                
+                code.onclick = () => {
+                    navigator.clipboard.writeText(pattern.css);
+                    const originalText = pattern.css;
+                    code.textContent = "Copied!";
+                    setTimeout(() => code.textContent = originalText, 1000);
+                };
+
+                card.appendChild(code);
+                grid.appendChild(card);
+            });
+        }
+
+        let activeFilter = 'all';
+        let searchQuery = '';
+
+        function initFilters() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    activeFilter = tab.dataset.filter;
+                    applyFilters();
+                });
+            });
+        }
+
+        function initSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                applyFilters();
+            });
+        }
+
+        function applyFilters() {
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionData = CATALOG.sections.find(s => s.id === section.id);
+                const sectionFilter = sectionData ? sectionData.filter : '';
+                
+                // 1. Filter section by tab
+                let sectionVisibleByTab = (activeFilter === 'all' || activeFilter === sectionFilter);
+                
+                // 2. Filter cards within section by search
+                const cards = section.querySelectorAll('.property-card');
+                let visibleCardsInSection = 0;
+                
+                cards.forEach(card => {
+                    // Property name or Pattern label
+                    const propertyName = card.querySelector('.property-title').textContent.toLowerCase();
+                    const values = Array.from(card.querySelectorAll('.demo-label')).map(l => l.textContent.toLowerCase());
+                    
+                    const matchesSearch = propertyName.includes(searchQuery) || 
+                                          values.some(v => v.includes(searchQuery));
+                    
+                    if (matchesSearch) {
+                        card.style.display = 'flex';
+                        visibleCardsInSection++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // 3. Final section visibility
+                if (sectionVisibleByTab && visibleCardsInSection > 0) {
+                    section.style.display = 'block';
+                    // Update sidebar link
+                    const navLink = document.querySelector(`.nav-link[href="#${section.id}"]`);
+                    if (navLink) navLink.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                    const navLink = document.querySelector(`.nav-link[href="#${section.id}"]`);
+                    if (navLink) navLink.style.display = 'none';
+                }
+            });
+        }
+
         function renderApp() {
             initSidebar();
             initSections();
             initPropertyCards();
+            initPatterns();
             initScrollSpy();
+            initFilters();
+            initSearch();
+            applyFilters();
         }
 
         // Initialize rendering

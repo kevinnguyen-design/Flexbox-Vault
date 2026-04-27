@@ -20,3 +20,4 @@ Gemfile.lock
 # Node
 node_modules/
 npm-debug.log*
+.worktrees/

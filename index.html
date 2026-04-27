@@ -303,6 +303,38 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #3f3f46;
         }
+
+        /* Callout Boxes */
+        .callout-box {
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--border-color);
+        }
+
+        .callout-tip {
+            border-left-color: var(--accent-color);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .callout-gotcha {
+            border-left-color: var(--demo-amber);
+            background-color: rgba(245, 158, 11, 0.05);
+        }
+
+        .callout-pattern {
+            border-left-color: var(--demo-emerald);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .pattern-card .demo-container {
+            height: 140px;
+            background-color: #000;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -957,25 +989,74 @@
                 title.className = 'property-title';
                 title.textContent = pattern.label;
                 title.style.cursor = 'default';
-                title.style.pointerEvents = 'none';
                 card.appendChild(title);
 
-                const code = document.createElement('div');
-                code.className = 'demo-label';
-                code.style.textAlign = 'left';
-                code.style.marginTop = '0.5rem';
-                code.style.cursor = 'pointer';
-                code.textContent = pattern.css;
+                // Demo Container
+                const demoContainer = document.createElement('div');
+                demoContainer.className = 'demo-container';
                 
-                code.onclick = () => {
-                    navigator.clipboard.writeText(pattern.css);
-                    const originalText = pattern.css;
-                    code.textContent = "Copied!";
-                    setTimeout(() => code.textContent = originalText, 1000);
-                };
+                // Extract CSS rules from selector
+                const cssMatch = pattern.css.match(/\{([^}]+)\}/);
+                if (cssMatch && cssMatch[1]) {
+                    const rules = cssMatch[1].trim();
+                    demoContainer.setAttribute('style', rules);
+                    // Override min-height for demo purposes
+                    if (demoContainer.style.minHeight) demoContainer.style.minHeight = '0';
+                    demoContainer.style.height = '140px';
+                }
 
-                card.appendChild(code);
+                // Add items to demo
+                const itemsCount = pattern.slug.includes('grid') || pattern.slug.includes('cards') ? 4 : 1;
+                for (let i = 0; i < itemsCount; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'demo-item';
+                    if (pattern.slug.includes('holy-grail')) {
+                        const areas = ['header', 'sidebar', 'main', 'footer'];
+                        item.style.gridArea = areas[i];
+                        item.style.width = '100%';
+                        item.style.height = '100%';
+                    }
+                    demoContainer.appendChild(item);
+                }
+                card.appendChild(demoContainer);
+
+                // Copy Button
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'property-title';
+                copyBtn.style.marginTop = 'auto';
+                copyBtn.style.width = '100%';
+                copyBtn.style.textAlign = 'center';
+                copyBtn.textContent = "Copy CSS Pattern";
+                
+                const copyAction = () => {
+                    navigator.clipboard.writeText(pattern.css);
+                    copyBtn.textContent = "Copied!";
+                    setTimeout(() => copyBtn.textContent = "Copy CSS Pattern", 1000);
+                };
+                
+                copyBtn.onclick = copyAction;
+                card.appendChild(copyBtn);
+
                 grid.appendChild(card);
+            });
+        }
+
+        function initCallouts() {
+            CATALOG.callouts.forEach(callout => {
+                const section = document.getElementById(callout.section);
+                if (!section) return;
+
+                const calloutEl = document.createElement('div');
+                calloutEl.className = `callout-box callout-${callout.type}`;
+                calloutEl.textContent = callout.text;
+
+                // Prepend after the h2
+                const h2 = section.querySelector('h2');
+                if (h2 && h2.nextSibling) {
+                    section.insertBefore(calloutEl, h2.nextSibling);
+                } else {
+                    section.appendChild(calloutEl);
+                }
             });
         }
 
@@ -1073,6 +1154,7 @@
             initSections();
             initPropertyCards();
             initPatterns();
+            initCallouts();
             initScrollSpy();
             initFilters();
             initSearch();

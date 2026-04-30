@@ -124,3 +124,32 @@ test("POST /api/v1/telemetry/copy accepts event payload", () => {
   assert.equal(payload.received, true);
   assert.equal(payload.kind, "copy");
 });
+
+test("POST /api/v1/telemetry/copy rejects non-json content type", () => {
+  const app = createApp();
+  const response = app.inject({
+    method: "POST",
+    url: "/api/v1/telemetry/copy",
+    headers: { "content-type": "text/plain" },
+    body: "source=frontend"
+  });
+
+  assert.equal(response.statusCode, 415);
+});
+
+test("POST /api/v1/telemetry/copy rate limits noisy clients", () => {
+  const app = createApp();
+  const headers = { "content-type": "application/json", "x-real-ip": "1.2.3.4" };
+
+  let finalResponse;
+  for (let i = 0; i < 121; i += 1) {
+    finalResponse = app.inject({
+      method: "POST",
+      url: "/api/v1/telemetry/copy",
+      headers,
+      body: JSON.stringify({ source: "frontend", value: `v-${i}` })
+    });
+  }
+
+  assert.equal(finalResponse.statusCode, 429);
+});

@@ -119,6 +119,38 @@ function parseJsonBody(body) {
   }
 }
 
+const telemetryBucket = new Map();
+
+function getClientKey(headers) {
+  const xForwardedFor = String(headers["x-forwarded-for"] ?? "").split(",")[0].trim();
+  if (xForwardedFor) {
+    return xForwardedFor;
+  }
+  return String(headers["x-real-ip"] ?? "unknown");
+}
+
+function checkTelemetryRateLimit(headers) {
+  const now = Date.now();
+  const windowMs = 60_000;
+  const maxRequests = 120;
+  const key = getClientKey(headers);
+  const state = telemetryBucket.get(key) ?? { count: 0, resetAt: now + windowMs };
+
+  if (now >= state.resetAt) {
+    state.count = 0;
+    state.resetAt = now + windowMs;
+  }
+
+  if (state.count >= maxRequests) {
+    telemetryBucket.set(key, state);
+    return false;
+  }
+
+  state.count += 1;
+  telemetryBucket.set(key, state);
+  return true;
+}
+
 function route({ method, url, body, headers = {} }) {
   const parsed = parseRequestUrl(url);
   const pathname = parsed.pathname;
@@ -165,6 +197,10 @@ function route({ method, url, body, headers = {} }) {
   }
 
   if (method === "POST" && pathname === "/api/v1/telemetry/copy") {
+    if (!checkTelemetryRateLimit(headers)) {
+      return json(429, { error: "Rate limit exceeded." });
+    }
+
     const contentType = normalizeText(headers["content-type"] ?? "");
     if (contentType && !contentType.includes("application/json")) {
       return json(415, { error: "Content-Type must be application/json." });

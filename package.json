@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node backend/src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "node --check backend/src/*.js backend/test/*.js",
+    "typecheck": "node --check backend/src/*.js backend/test/*.js"
   }
 }
